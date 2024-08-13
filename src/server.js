@@ -1,3 +1,5 @@
+const ClientError = require("./exceptions/ClientError");
+
 const Hapi = require("@hapi/hapi");
 // [delete old code] const routes = require('./routes');
 
@@ -31,6 +33,26 @@ const init = async () => {
       service: notesService,
       validator: NotesValidator, // validator
     },
+  });
+
+  server.ext("onPreResponse", (request, h) => {
+    // mendapatkan konteks response dari request
+    const { response } = request;
+
+    // penanganan client error secara internal.
+    if (response instanceof ClientError) {
+      // Jika error berasal dari instance ClientError,
+      // response akan mengembalikan status fail, status code, dan message sesuai dengan errornya
+      const newResponse = h.response({
+        status: "fail",
+        message: response.message,
+      });
+      newResponse.code(response.statusCode);
+      return newResponse;
+    }
+
+    // Jika error bukan ClientError, kembalikan response apa adanya, biarlah Hapi yang menangani response secara default
+    return h.continue;
   });
 
   await server.start();
