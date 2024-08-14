@@ -12,7 +12,7 @@ class NotesHandler {
     this.deleteNoteByIdHandler = this.deleteNoteByIdHandler.bind(this);
   }
 
-  postNoteHandler(request, h) {
+  async postNoteHandler(request, h) {
     // validator
     this._validator.validateNotePayload(request.payload);
 
@@ -20,7 +20,7 @@ class NotesHandler {
     const { title = "untitled", body, tags } = request.payload;
 
     // call function addNote
-    const noteId = this._service.addNote({ title, body, tags });
+    const noteId = await this._service.addNote({ title, body, tags });
 
     const response = h.response({
       status: "success",
@@ -66,10 +66,9 @@ class NotesHandler {
     // }
   }
 
-  getNotesHandler() {
-    console.log("aaaaa 1");
-    const notes = this._service.getNotes();
-    console.log("aaaaa 2==", notes);
+  async getNotesHandler() {
+    const notes = await this._service.getNotes();
+
     return {
       status: "success",
       data: {
@@ -78,11 +77,11 @@ class NotesHandler {
     };
   }
 
-  getNoteByIdHandler(request, h) {
+  async getNoteByIdHandler(request, h) {
     // get value id note dari path parameter
     const { id } = request.params;
 
-    const note = this._service.getNoteById(id);
+    const note = await this._service.getNoteById(id);
 
     return {
       status: "success",
@@ -124,23 +123,19 @@ class NotesHandler {
     // }
   }
 
-  putNoteByIdHandler(request, h) {
+  async putNoteByIdHandler(request, h) {
     // validator
-    console.log("tesss 1");
     this._validator.validateNotePayload(request.payload);
 
-    console.log("tesss 2");
     const { id } = request.params;
 
-    console.log("tesss 3");
-    this._service.editNoteById(id, request.payload);
+    await this._service.editNoteById(id, request.payload);
 
-    console.log("tesss 4");
     return {
       status: "success",
       message: "Catatan berhasil diperbarui",
     };
-    //
+
     // rm try catch karena implementasi onPreResponse untuk Custom Error
     // try {
     // } catch (error) {
@@ -175,9 +170,13 @@ class NotesHandler {
     // }
   }
 
-  deleteNoteByIdHandler(request, h) {
+  async deleteNoteByIdHandler(request, h) {
+    console.log("coba ya 1");
     const { id } = request.params;
-    this._service.deleteNoteById(id);
+    console.log("coba ya 2");
+    await this._service.deleteNoteById(id);
+    console.log("coba ya 3");
+
     return {
       status: "success",
       message: "Catatan berhasil dihapus",

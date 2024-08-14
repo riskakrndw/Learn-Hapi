@@ -8,7 +8,10 @@ const Hapi = require("@hapi/hapi");
 
 // import nilai notes plugin dan NotesService
 const notes = require("./api/notes");
-const NotesService = require("./services/inMemory/NotesService");
+
+// use db
+const NotesService = require("./services/postgres/NotesService");
+// const NotesService = require("./services/inMemory/NotesService");
 
 // impor NotesValidator dari berkas src -> validator -> notes -> index.js
 const NotesValidator = require("./validator/notes");
