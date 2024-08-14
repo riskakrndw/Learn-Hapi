@@ -1,3 +1,6 @@
+// mengimpor dotenv dan menjalankan konfigurasinya
+require("dotenv").config();
+
 const ClientError = require("./exceptions/ClientError");
 
 const Hapi = require("@hapi/hapi");
@@ -15,8 +18,12 @@ const init = async () => {
   const notesService = new NotesService();
 
   const server = Hapi.server({
-    port: 3000,
-    host: process.env.NODE_ENV !== "production" ? "localhost" : "0.0.0.0",
+    // menggunakan config dari .env
+    port: process.env.PORT,
+    host: process.env.HOST,
+
+    // port: 3000,
+    // host: process.env.NODE_ENV !== "production" ? "localhost" : "0.0.0.0",
     routes: {
       cors: {
         origin: ["*"],
