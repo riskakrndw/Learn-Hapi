@@ -16,9 +16,16 @@ const NotesService = require("./services/postgres/NotesService");
 // impor NotesValidator dari berkas src -> validator -> notes -> index.js
 const NotesValidator = require("./validator/notes");
 
+// users
+const users = require("./api/users");
+const UsersService = require("./services/postgres/UsersService");
+const UsersValidator = require("./validator/users");
+
 const init = async () => {
   // membuat instance dari NotesService
   const notesService = new NotesService();
+
+  const usersService = new UsersService();
 
   const server = Hapi.server({
     // menggunakan config dari .env
@@ -37,13 +44,22 @@ const init = async () => {
   // [delete old code] server.route(routes);
 
   // mendaftarkan plugin notes dengan options.service bernilai notesService
-  await server.register({
-    plugin: notes,
-    options: {
-      service: notesService,
-      validator: NotesValidator, // validator
+  await server.register([
+    {
+      plugin: notes,
+      options: {
+        service: notesService,
+        validator: NotesValidator, // validator
+      },
     },
-  });
+    {
+      plugin: users,
+      options: {
+        service: usersService,
+        validator: UsersValidator,
+      },
+    },
+  ]);
 
   server.ext("onPreResponse", (request, h) => {
     // mendapatkan konteks response dari request
