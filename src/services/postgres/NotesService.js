@@ -2,6 +2,9 @@ const { Pool } = require("pg");
 const { nanoid } = require("nanoid");
 const { mapDBToModel } = require("../../utils/index");
 
+const InvariantError = require("../../exceptions/InvariantError");
+const NotFoundError = require("../../exceptions/NotFoundError");
+
 class NotesService {
   constructor() {
     // inisialisasi properti this._pool dengan instance dari package pg.Pool.

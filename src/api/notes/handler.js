@@ -171,11 +171,8 @@ class NotesHandler {
   }
 
   async deleteNoteByIdHandler(request, h) {
-    console.log("coba ya 1");
     const { id } = request.params;
-    console.log("coba ya 2");
     await this._service.deleteNoteById(id);
-    console.log("coba ya 3");
 
     return {
       status: "success",
