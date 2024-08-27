@@ -13,61 +13,62 @@ class NotesHandler {
   }
 
   async postNoteHandler(request, h) {
-    // validator
-    this._validator.validateNotePayload(request.payload);
+    try {
+      console.log("ps1");
+      // validator
+      this._validator.validateNotePayload(request.payload);
+      console.log("ps2");
 
-    // mendapatkan value dari body request
-    const { title = "untitled", body, tags } = request.payload;
+      // mendapatkan value dari body request
+      const { title = "untitled", body, tags } = request.payload;
+      const { id: credentialId } = request.auth.credentials;
+      console.log("ps3");
 
-    // call function addNote
-    const noteId = await this._service.addNote({ title, body, tags });
+      // call function addNote
+      const noteId = await this._service.addNote({
+        title,
+        body,
+        tags,
+        owner: credentialId,
+      });
+      console.log("ps4");
 
-    const response = h.response({
-      status: "success",
-      message: "Catatan berhasil ditambahkan",
-      data: {
-        noteId,
-      },
-    });
+      const response = h.response({
+        status: "success",
+        message: "Catatan berhasil ditambahkan",
+        data: {
+          noteId,
+        },
+      });
+      console.log("ps5");
 
-    response.code(201);
-    return response;
+      response.code(201);
+      return response;
+    } catch (error) {
+      if (error instanceof ClientError) {
+        const response = h.response({
+          status: "fail",
+          message: error.message,
+        });
+        response.code(error.statusCode);
+        return response;
+      }
 
-    // rm try catch karena implementasi onPreResponse untuk Custom Error
-    // try {
-    // } catch (error) {
-    //   if (error instanceof ClientError) {
-    //     const response = h.response({
-    //       status: "fail",
-    //       message: error.message,
-    //     });
-    //     response.code(error.statusCode);
-    //     return response;
-    //   }
-
-    //   // Server ERROR!
-    //   const response = h.response({
-    //     status: "error",
-    //     message: "Maaf, terjadi kegagalan pada server kami.",
-    //   });
-    //   response.code(502);
-    //   return response;
-    // }
-
-    // handling error lama
-    // catch (error) {
-    //   console.log("errrrr==", error);
-    //   const response = h.response({
-    //     status: "fail",
-    //     message: error.message,
-    //   });
-    //   response.code(400);
-    //   return response;
-    // }
+      // Server ERROR!
+      const response = h.response({
+        status: "error",
+        message: "Maaf, terjadi kegagalan pada server kami.",
+      });
+      response.code(500);
+      console.error(error);
+      return response;
+    }
   }
 
   async getNotesHandler() {
-    const notes = await this._service.getNotes();
+    const { id: credentialId } = request.auth.credentials;
+
+    const notes = await this._service.getNotes(credentialId);
 
     return {
       status: "success",
@@ -78,138 +79,109 @@ class NotesHandler {
   }
 
   async getNoteByIdHandler(request, h) {
-    // get value id note dari path parameter
-    const { id } = request.params;
+    try {
+      // get value id note dari path parameter
+      const { id } = request.params;
+      const { id: credentialId } = request.auth.credentials;
 
-    const note = await this._service.getNoteById(id);
+      await this._service.verifyNoteOwner(id, credentialId);
 
-    return {
-      status: "success",
-      data: {
-        note,
-      },
-    };
+      const note = await this._service.getNoteById(id);
 
-    // rm try catch karena implementasi onPreResponse untuk Custom Error
-    // try {
-    // } catch (error) {
-    //   if (error instanceof ClientError) {
-    //     const response = h.response({
-    //       status: "fail",
-    //       message: error.message,
-    //     });
-    //     response.code(error.statusCode);
-    //     return response;
-    //   }
+      return {
+        status: "success",
+        data: {
+          note,
+        },
+      };
+    } catch (error) {
+      if (error instanceof ClientError) {
+        const response = h.response({
+          status: "fail",
+          message: error.message,
+        });
+        response.code(error.statusCode);
+        return response;
+      }
 
-    //   // Server ERROR!
-    //   const response = h.response({
-    //     status: "error",
-    //     message: "Maaf, terjadi kegagalan pada server kami.",
-    //   });
-    //   response.code(500);
-    //   console.error(error);
-    //   return response;
-    // }
-
-    // handling error lama
-    // catch (error) {
-    //   const response = h.response({
-    //     status: "fail",
-    //     message: error.message,
-    //   });
-    //   response.code(404);
-    //   return response;
-    // }
+      // Server ERROR!
+      const response = h.response({
+        status: "error",
+        message: "Maaf, terjadi kegagalan pada server kami.",
+      });
+      response.code(500);
+      console.error(error);
+      return response;
+    }
   }
 
   async putNoteByIdHandler(request, h) {
-    // validator
-    this._validator.validateNotePayload(request.payload);
+    try {
+      // validator
+      this._validator.validateNotePayload(request.payload);
 
-    const { id } = request.params;
+      const { id } = request.params;
+      const { id: credentialId } = request.auth.credentials;
 
-    await this._service.editNoteById(id, request.payload);
+      await this._service.verifyNoteOwner(id, credentialId);
+      await this._service.editNoteById(id, request.payload);
 
-    return {
-      status: "success",
-      message: "Catatan berhasil diperbarui",
-    };
+      return {
+        status: "success",
+        message: "Catatan berhasil diperbarui",
+      };
+    } catch (error) {
+      if (error instanceof ClientError) {
+        const response = h.response({
+          status: "fail",
+          message: error.message,
+        });
+        response.code(error.statusCode);
+        return response;
+      }
 
-    // rm try catch karena implementasi onPreResponse untuk Custom Error
-    // try {
-    // } catch (error) {
-    //   // handling error menggunakan custom error
-    //   if (error instanceof ClientError) {
-    //     const response = h.response({
-    //       status: "fail",
-    //       message: error.message,
-    //     });
-    //     response.code(error.statusCode);
-    //     return response;
-    //   }
-
-    //   // Server ERROR!
-    //   const response = h.response({
-    //     status: "error",
-    //     message: "Maaf, terjadi kegagalan pada server kami.",
-    //   });
-    //   response.code(500);
-    //   console.error(error);
-    //   return response;
-    // }
-
-    // handling error lama
-    // catch (error) {
-    //   const response = h.response({
-    //     status: "fail",
-    //     message: error.message,
-    //   });
-    //   response.code(404);
-    //   return response;
-    // }
+      // Server ERROR!
+      const response = h.response({
+        status: "error",
+        message: "Maaf, terjadi kegagalan pada server kami.",
+      });
+      response.code(500);
+      console.error(error);
+      return response;
+    }
   }
 
   async deleteNoteByIdHandler(request, h) {
-    const { id } = request.params;
-    await this._service.deleteNoteById(id);
+    try {
+      const { id } = request.params;
+      const { id: credentialId } = request.auth.credentials;
 
-    return {
-      status: "success",
-      message: "Catatan berhasil dihapus",
-    };
+      await this._service.verifyNoteOwner(id, credentialId);
+      await this._service.deleteNoteById(id);
 
-    // rm try catch karena implementasi onPreResponse untuk Custom Error
-    // try {
-    // } catch (error) {
-    //   if (error instanceof ClientError) {
-    //     const response = h.response({
-    //       status: "fail",
-    //       message: error.message,
-    //     });
-    //     response.code(error.statusCode);
-    //     return response;
-    //   }
+      return {
+        status: "success",
+        message: "Catatan berhasil dihapus",
+      };
+    } catch (error) {
+      if (error instanceof ClientError) {
+        const response = h.response({
+          status: "fail",
+          message: error.message,
+        });
+        response.code(error.statusCode);
+        return response;
+      }
 
-    //   // Server ERROR!
-    //   const response = h.response({
-    //     status: "error",
-    //     message: "Maaf, terjadi kegagalan pada server kami.",
-    //   });
-    //   response.code(500);
-    //   console.error(error);
-    //   return response;
-    // }
-
-    // handling error lama
-    // catch (error) {
-    //   const response = h.response({
-    //     status: "fail",
-    //     message: error.message,
-    //   });
-    //   response.code(404);
-    //   return response;
-    // }
+      // Server ERROR!
+      const response = h.response({
+        status: "error",
+        message: "Maaf, terjadi kegagalan pada server kami.",
+      });
+      response.code(500);
+      console.error(error);
+      return response;
+    }
   }
 }
 
