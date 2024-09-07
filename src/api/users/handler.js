@@ -5,6 +5,7 @@ class UsersHandler {
 
     this.postUserHandler = this.postUserHandler.bind(this);
     this.getUserByIdHandler = this.getUserByIdHandler.bind(this);
+    this.getHelloHandler = this.getHelloHandler.bind(this);
   }
 
   async postUserHandler(request, h) {
@@ -36,6 +37,13 @@ class UsersHandler {
       data: {
         user,
       },
+    };
+  }
+
+  async getHelloHandler(request, h) {
+    return {
+      status: "success",
+      message: "heloowwww",
     };
   }
 }
